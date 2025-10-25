@@ -7,6 +7,18 @@ import pandas as pd
 from PIL import Image
 import streamlit as st
 
+from supabase import create_client, Client
+
+# --- Supabase client ---
+@st.cache_resource
+def get_client() -> Client:
+    url = st.secrets["SUPABASE_URL"]
+    key = st.secrets["SUPABASE_ANON_KEY"]
+    return create_client(url, key)
+
+supabase = get_client()
+TABLE = "burger_logs"
+
 # ---------- Ayarlar ----------
 APP_TITLE = "🍔 Burger Günlüğü"
 DATA_FILE = Path("burger_log.csv")
@@ -83,7 +95,7 @@ with st.sidebar:
 st.header("Yeni Kayıt")
 mekan = st.text_input("Mekan Adı *")
 tarih = st.date_input("Tarih", value=date.today())
-foto_file = st.file_uploader("Fotoğraf (isteğe bağlı)", type=["jpg","jpeg","png","webp"])
+#foto_file = st.file_uploader("Fotoğraf (isteğe bağlı)", type=["jpg","jpeg","png","webp"])
 
 # Baba
 st.subheader("Baba")
@@ -113,49 +125,40 @@ if st.button("Kaydı Ekle"):
     if not mekan.strip():
         st.warning("Mekan adı zorunlu.")
     else:
-        photo_path = save_photo(foto_file)
+        #photo_path = save_photo(foto_file)
         row = {
             "id": uuid.uuid4().hex,
-            "Tarih": tarih,
-            "Mekan": mekan.strip(),
-            "Foto": photo_path or "",
-            **{f"Gökçe {c}": int(gokce_scores[c]) for c in CATS},
-            "Gökçe Yorum": gokce_yorum.strip(),
-            "Gökçe Toplam": gokce_toplam,
-            **{f"Baba {c}": int(baba_scores[c]) for c in CATS},
-            "Baba Yorum": baba_yorum.strip(),
-            "Baba Toplam": baba_toplam,
-            "Ortalama": ortalama
+            "tarih": str(tarih),
+            "mekan": mekan.strip(),
+            "baba_puan": int(baba_toplam),
+            "baba_yorum": baba_yorum.strip(),
+            "gokce_puan": int(gokce_toplam),
+            "gokce_yorum": gokce_yorum.strip(),
+            "ortalama": float(ortalama),
         }
-        new_df = pd.DataFrame([row], columns=base_columns())
-        df = pd.concat([new_df, df], ignore_index=True)
-        save_data(df)
-        st.success("Kayıt eklendi ✅")
+        res = supabase.table(TABLE).insert(row).execute()
+        if res.data:
+            st.success("Kayıt eklendi ✅")
+            st.experimental_rerun()
+        else:
+            st.error("Kayıt eklenemedi. Policy/şema ayarlarını kontrol et.")
 
 # ---- Kayıtlar ----
 st.header("Kayıtlar")
-if df.empty:
+res = supabase.table(TABLE).select("*").order("tarih", desc=True).execute()
+rows = res.data or []
+if not rows:
     st.info("Henüz kayıt yok.")
 else:
-    # Kart gibi liste
-    for _, r in df.sort_values("Tarih", ascending=False).iterrows():
+    # Liste
+    for r in rows:
         with st.container(border=True):
-            c1, c2 = st.columns([1,3])
-            with c1:
-                if str(r["Foto"]).strip() and Path(str(r["Foto"])).exists():
-                    st.image(str(r["Foto"]), use_column_width=True)
-                else:
-                    st.caption("Fotoğraf yok")
-            with c2:
-                st.subheader(f"{r['Mekan']}")
-                st.caption(f"Tarih: {r['Tarih']}")
-                st.write(f"**Gökçe Toplam:** {r['Gökçe Toplam']}  |  **Baba Toplam:** {r['Baba Toplam']}  |  **Ortalama:** {r['Ortalama']}")
-                with st.expander("Gökçe Detay"):
-                    st.write({c: int(r[f"Gökçe {c}"]) for c in CATS})
-                    st.write("Yorum:", r["Gökçe Yorum"])
-                with st.expander("Baba Detay"):
-                    st.write({c: int(r[f"Baba {c}"]) for c in CATS})
-                    st.write("Yorum:", r["Baba Yorum"])
+            st.subheader(r.get("mekan", "—"))
+            st.caption(f"Tarih: {r.get('tarih', '—')}")
+            st.write(f"**Baba:** {r.get('baba_scores', 0)} — {r.get('baba_yorum', '')}")
+            st.write(f"**Gökçe:** {r.get('gokce_scores', 0)} — {r.get('gokce_yorum', '')}")
+            st.write(f"**Ortalama:** {r.get('ortalama', 0)}")
 
+    # Tablo görünümü
     with st.expander("📊 Tablo görünümü"):
-        st.dataframe(df, use_container_width=True)
+        st.dataframe(pd.DataFrame(rows), use_container_width=True)

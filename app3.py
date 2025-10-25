@@ -119,7 +119,7 @@ gokce_yorum = st.text_area("Gökçe Yorumu", key="gokce_yorum")
 gokce_toplam = avg(gokce_scores.values())
 
 ortalama = avg([gokce_toplam, baba_toplam])
-st.info(f"Genel Ortalama: **{ortalama}**⭐  |  Baba: {baba_toplam}⭐ • Gökçe: {gokce_toplam}⭐")
+st.info(f"Genel Ortalama: **{ortalama}** ⭐  |  Baba: {baba_toplam} ⭐ • Gökçe: {gokce_toplam} ⭐")
 
 if st.button("Kaydı Ekle"):
     if not mekan.strip():

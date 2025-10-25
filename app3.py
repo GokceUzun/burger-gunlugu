@@ -17,7 +17,7 @@ def get_client() -> Client:
     return create_client(url, key)
 
 supabase = get_client()
-TABLE = "burger_logs"
+TABLE = "burger-logs"
 
 # ---------- Ayarlar ----------
 APP_TITLE = "🍔 Burger Günlüğü"

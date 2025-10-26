@@ -155,8 +155,8 @@ else:
         with st.container(border=True):
             st.subheader(r.get("mekan", "—"))
             st.caption(f"Tarih: {r.get('tarih', '—')}")
-            st.write(f"**Baba:** {r.get('baba_toplam', 0)} ⭐ — {r.get('baba_yorum', '')}")
-            st.write(f"**Gökçe:** {r.get('gokce_toplam', 0)}⭐ — {r.get('gokce_yorum', '')}")
+            st.write(f"**Baba:** {r.get('baba_puan', 0)} ⭐ — {r.get('baba_yorum', '')}")
+            st.write(f"**Gökçe:** {r.get('gokce_puan', 0)} ⭐ — {r.get('gokce_yorum', '')}")
             st.write(f"**Ortalama:** {r.get('ortalama', 0)} ⭐")
 
     # Tablo görünümü

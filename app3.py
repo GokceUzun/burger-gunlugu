@@ -139,7 +139,7 @@ if st.button("Kaydı Ekle"):
         res = supabase.table(TABLE).insert(row).execute()
         if res.data:
             st.success("Kayıt eklendi ✅")
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("Kayıt eklenemedi. Policy/şema ayarlarını kontrol et.")
 
@@ -155,10 +155,10 @@ else:
         with st.container(border=True):
             st.subheader(r.get("mekan", "—"))
             st.caption(f"Tarih: {r.get('tarih', '—')}")
-            st.write(f"**Baba:** {r.get('baba_scores', 0)} — {r.get('baba_yorum', '')}")
-            st.write(f"**Gökçe:** {r.get('gokce_scores', 0)} — {r.get('gokce_yorum', '')}")
-            st.write(f"**Ortalama:** {r.get('ortalama', 0)}")
+            st.write(f"**Baba:** {r.get('baba_toplam', 0)} ⭐ — {r.get('baba_yorum', '')}")
+            st.write(f"**Gökçe:** {r.get('gokce_toplam', 0)}⭐ — {r.get('gokce_yorum', '')}")
+            st.write(f"**Ortalama:** {r.get('ortalama', 0)} ⭐")
 
     # Tablo görünümü
     with st.expander("📊 Tablo görünümü"):
-        st.dataframe(pd.DataFrame(rows), use_container_width=True)
+        st.dataframe(pd.DataFrame(rows), width='stretch')
